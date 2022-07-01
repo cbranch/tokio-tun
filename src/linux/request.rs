@@ -16,6 +16,14 @@ pub struct ifreq {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+pub struct in6_ifreq {
+    pub ifr6_addr: in6_addr,
+    pub ifr6_prefixlen: ::std::os::raw::c_uint,
+    pub ifr6_ifindex: ::std::os::raw::c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
 pub union ifreq_ifrn {
     pub ifrn_name: [::std::os::raw::c_char; 16usize],
     align: [u8; 16usize],
@@ -30,6 +38,7 @@ pub union ifreq_ifru {
     pub ifru_netmask: sockaddr,
     pub ifru_hwaddr: sockaddr,
     pub ifru_flags: ::std::os::raw::c_short,
+    pub ifru_ifindex: ::std::os::raw::c_int,
     pub ifru_ivalue: ::std::os::raw::c_int,
     pub ifru_mtu: ::std::os::raw::c_int,
     pub ifru_map: ifmap,
@@ -45,6 +54,9 @@ pub struct sockaddr {
     pub sa_family: ::std::os::raw::c_ushort,
     pub sa_data: [::std::os::raw::c_char; 14usize],
 }
+
+// See https://man7.org/linux/man-pages/man7/ipv6.7.html
+pub type in6_addr = libc::in6_addr;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
