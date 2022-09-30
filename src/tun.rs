@@ -57,7 +57,7 @@ impl AsyncWrite for Tun {
 impl Tun {
     /// Creates a new instance of Tun/Tap device.
     pub(crate) fn new(params: Params) -> Result<Self> {
-        let iface = Self::allocate(params, 1)?;
+        let iface = Self::allocate(params, None)?;
         let fd = iface.files()[0];
         Ok(Self {
             iface: Arc::new(iface),
@@ -67,7 +67,7 @@ impl Tun {
 
     /// Creates a new instance of Tun/Tap device.
     pub(crate) fn new_mq(params: Params, queues: usize) -> Result<Vec<Self>> {
-        let iface = Self::allocate(params, queues)?;
+        let iface = Self::allocate(params, Some(queues))?;
         let mut tuns = Vec::with_capacity(queues);
         let files = iface.files().to_vec();
         let iface = Arc::new(iface);
@@ -80,16 +80,18 @@ impl Tun {
         Ok(tuns)
     }
 
-    fn allocate(params: Params, queues: usize) -> Result<Interface> {
-        let mut fds = Vec::with_capacity(queues);
+    fn allocate(params: Params, queues: Option<usize>) -> Result<Interface> {
+        let n_queues = queues.unwrap_or(1);
+        let mut fds = Vec::with_capacity(n_queues);
         let path = CString::new("/dev/net/tun")?;
-        for _ in 0..queues {
+        for _ in 0..n_queues {
             fds.push(unsafe { libc::open(path.as_ptr(), libc::O_RDWR | libc::O_NONBLOCK) });
         }
         let iface = Interface::new(
             fds,
             params.name.as_deref().unwrap_or_default(),
             params.flags,
+            queues.is_some(),
         )?;
         iface.init(params)?;
         Ok(iface)
